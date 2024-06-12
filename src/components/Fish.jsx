@@ -8,98 +8,84 @@ Title: Tosakin goldfish
 */
 
 import React, { useRef, useEffect, useLayoutEffect } from "react";
-import { useGLTF, useAnimations } from "@react-three/drei";
+import { useGLTF, useAnimations, useScroll } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { gsap } from "gsap";
 
+export const FLOOR_HEIGHT = 2.3;
+export const NB_FLOORS = 3;
+
 export default function Model(props) {
-  const group = useRef();
-  const { nodes, materials, animations } = useGLTF("/fish.gltf");
-  const { actions } = useAnimations(animations, group);
-  let camera = useThree((state) => state.camera);
-  let scene = useThree((state) => state.scene);
+  const ref = useRef();
+  const { nodes, materials, animations } = useGLTF("../../public/fish.gltf");
+  const { actions } = useAnimations(animations, ref);
+  const tl = useRef();
+
+  // let camera = useThree((state) => state.camera);
+  // let scene = useThree((state) => state.scene);
   useEffect(() => {
     if (actions.Scene) {
       actions.Scene.play();
       actions.Scene.timeScale = 0.5;
     }
-    console.log("actions:", actions);
+    // console.log("actions:", actions);
   }, []);
-  let mm = gsap.matchMedia();
-  mm.add(
-    {
-      // set up any number of arbitrarily-named conditions. The function below will be called when ANY of them match.
-      isDesktop: `(min-width: 800px)`,
-      isMobile: `(max-width: 799px)`,
-      reduceMotion: "(prefers-reduced-motion: reduce)",
-    },
-    (context) => {
-      useLayoutEffect(() => {
-        let { isDesktop } = context.conditions;
-        isDesktop ? camera.position.set(0, 2, 6) : camera.position.set(0, 2, 9);
 
-        // gsap.to(camera.position, { x: -1, y: 0.5 });
-        let tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: "#menu",
-            start: isDesktop ? "top+=650 top" : "top+=570 top",
-            endTrigger: "#footer",
-            end: "top top",
-            scrub: 1,
-            markers: true,
-          },
-        });
+  const scroll = useScroll();
 
-        tl.fromTo(camera.position, { y: 7 }, { y: 0 })
-          .to(camera.position, {
-            duration: 1,
-            x: 3,
-            y: 1,
-          })
-          .to(scene.rotation, {
-            y: isDesktop ? 1.5 : 0,
-          });
-        // .to(camera.position, {
-        //   duration: 1,
-        //   x: 3,
-        //   y: 1,
-        // })
-        // .to(scene.rotation, {
-        //   y: isDesktop ? 1.5 : 0,
-        // })
-        // .to(scene.rotation, {
-        //   x: 1,
-        // })
-        // .to(camera.position, {
-        //   y: isDesktop ? 1 : 0,
-        //   x: isDesktop ? -3 : 0,
-        // })
-        // .to(scene.rotation, {
-        //   y: 5,
-        // })
-        // .to(scene.rotation, {
-        //   x: 0,
-        // })
-        // .to(scene.rotation, { y: isDesktop ? -1.5 : 3, z: 0 })
-        // .to(camera.position, { x: 3 })
-        // .to(scene.rotation, { y: 1.5, z: 0 })
-        // .to(camera.position, { z: isDesktop ? 5 : 8 })
-        // // .to(camera.position, { z: 6, x: -1 })
-        // .to(scene.rotation, { z: 6.3, y: 0, duration: 1 })
-        // .to(camera.position, { x: 0, y: 0.7 })
-        // .to(scene.rotation, { x: 0.8 })
-        // .to(camera.position, { z: 10 }, "key2")
-        // .to(scene.rotation, { x: 0 });
+  useFrame(() => {
+    tl.current.seek(scroll.offset * tl.current.duration());
+  });
 
-        // .fromTo(camera.position, { x: 4 }, { x: 0 });
-        return () => {
-          if (tl) tl.kill();
-        };
-      }, []);
-    }
-  );
+  useLayoutEffect(() => {
+    tl.current = gsap.timeline();
+
+    // VERTICAL ANIMATION
+    tl.current.to(
+      ref.current.position,
+      {
+        duration: 2,
+        y: -FLOOR_HEIGHT * (NB_FLOORS - 1),
+      },
+      0
+    );
+
+    // Office Rotation
+    tl.current.to(
+      ref.current.rotation,
+      { duration: 1, x: 0, y: Math.PI / 6, z: 0 },
+      0
+    );
+    tl.current.to(
+      ref.current.rotation,
+      { duration: 1, x: 0, y: -Math.PI / 6, z: 0 },
+      1
+    );
+
+    // Office movement
+    tl.current.to(
+      ref.current.position,
+      {
+        duration: 1,
+        x: -1,
+        z: 2,
+      },
+      0
+    );
+    tl.current.to(
+      ref.current.position,
+      {
+        duration: 1,
+        x: 1,
+        z: 2,
+      },
+      1
+    );
+  }, []);
+
   return (
-    <group ref={group} {...props} dispose={null}>
+    <group ref={ref} {...props} dispose={null}>
       <group name="Sketchfab_Scene">
         <group name="Sketchfab_model" rotation={[-Math.PI / 2, 0, 0]}>
           <group
@@ -111,84 +97,80 @@ export default function Model(props) {
                 <group
                   name="finDorsalB"
                   rotation={[-Math.PI / 2, 0, 0]}
-                  scale={100}
+                  scale={30}
                 />
                 <group
                   name="finAnalB"
                   rotation={[-Math.PI / 2, 0, 0]}
-                  scale={100}
+                  scale={30}
                 />
                 <group
                   name="finPelvicB"
                   rotation={[-Math.PI / 2, 0, 0]}
-                  scale={100}
+                  scale={30}
                 />
                 <group
                   name="finPectoralB"
                   rotation={[-Math.PI / 2, 0, 0]}
-                  scale={100}
+                  scale={30}
                 />
                 <group
                   name="finCaudalB"
                   rotation={[-Math.PI / 2, 0, 0]}
-                  scale={100}
+                  scale={30}
                 />
-                <group
-                  name="body"
-                  rotation={[-Math.PI / 2, 0, 0]}
-                  scale={100}
-                />
+                <group name="body" rotation={[-Math.PI / 2, 0, 0]} scale={30} />
                 <group
                   name="eye_L"
                   rotation={[-Math.PI / 2, 0, 0]}
-                  scale={100}
+                  scale={30}
                 />
                 <group
                   name="RIG_Tosakin"
                   rotation={[-Math.PI / 2, 0, 0]}
-                  scale={100}
+                  scale={30}
                 >
                   <group name="Object_12">
                     <primitive object={nodes._rootJoint} />
                     <group
                       name="Object_14"
                       rotation={[-Math.PI / 2, 0, 0]}
-                      scale={100}
+                      scale={30}
                     />
                     <group
                       name="Object_16"
                       rotation={[-Math.PI / 2, 0, 0]}
-                      scale={100}
+                      scale={30}
                     />
                     <group
                       name="Object_18"
                       rotation={[-Math.PI / 2, 0, 0]}
-                      scale={100}
+                      scale={30}
                     />
                     <group
                       name="Object_20"
                       rotation={[-Math.PI / 2, 0, 0]}
-                      scale={100}
+                      scale={30}
                     />
                     <group
                       name="Object_22"
                       rotation={[-Math.PI / 2, 0, 0]}
-                      scale={100}
+                      scale={30}
                     />
                     <group
                       name="Object_24"
                       rotation={[-Math.PI / 2, 0, 0]}
-                      scale={100}
+                      scale={30}
                     />
                     <group
                       name="Object_26"
                       rotation={[-Math.PI / 2, 0, 0]}
-                      scale={100}
+                      scale={30}
                     />
                     <group
                       name="Object_94"
                       rotation={[-Math.PI / 2, 0, 0]}
-                      scale={100}
+                      scale={30}
                     />
                     <skinnedMesh
                       name="Object_15"
@@ -279,7 +261,7 @@ export default function Model(props) {
                 <group
                   name="eye_R"
                   rotation={[-Math.PI / 2, 0, 0]}
-                  scale={100}
+                  scale={30}
                 />
               </group>
             </group>
@@ -290,4 +272,4 @@ export default function Model(props) {
   );
 }
 
-useGLTF.preload("/fish.gltf");
+useGLTF.preload("../../public/fish.gltf");

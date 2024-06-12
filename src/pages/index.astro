@@ -1,16 +1,12 @@
 ---
-
 import Layout from '../layouts/Layout.astro';
-import {FishComponent} from "../components/FishComponent"
+import {Animation} from "../components/Animation"
 import "../index.css"
 ---
 
 <Layout title="Welcome to Astro.">
 	<main>
-		<FishComponent client:only />
-		<div id="menu">menu</div>
-		<div id="contenedor">contenedor</div>
-		<div id="footer">footer</div>
+		<Animation client:only="react"/>
 	</main>
 </Layout>
 
@@ -18,6 +14,5 @@ import "../index.css"
 	main {
 		width: 100%;
 		height: 100%;
-		color: white;
 	}
 </style>
